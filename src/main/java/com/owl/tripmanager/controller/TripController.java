@@ -3,8 +3,10 @@ package com.owl.tripmanager.controller;
 import com.owl.tripmanager.dto.TripRequest;
 import com.owl.tripmanager.dto.TripResponse;
 import com.owl.tripmanager.dto.SubscriptionRequest;
+import com.owl.tripmanager.dto.TravelExpenseResponse;
 import com.owl.tripmanager.model.Trip;
 import com.owl.tripmanager.service.TripService;
+import com.owl.tripmanager.service.TravelExpenseService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,6 +21,7 @@ import java.util.List;
 public class TripController {
 
     private final TripService tripService;
+    private final TravelExpenseService travelExpenseService;
 
     // 1. GET: Read all trips
     @GetMapping
@@ -64,5 +67,13 @@ public class TripController {
             @Valid @RequestBody SubscriptionRequest request) {
         Trip trip = tripService.subscribeTourist(tripId, request.touristId());
         return ResponseEntity.ok(TripResponse.fromEntity(trip));
+    }
+
+    @GetMapping("/{tripId}/expenses")
+    public ResponseEntity<List<TravelExpenseResponse>> getExpensesByTripId(@PathVariable Long tripId) {
+        List<TravelExpenseResponse> responses = travelExpenseService.getExpensesByTripId(tripId).stream()
+                .map(TravelExpenseResponse::fromEntity)
+                .toList();
+        return ResponseEntity.ok(responses);
     }
 }

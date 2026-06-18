@@ -38,4 +38,6 @@ build/
 ### Maven Local Repository ###
 /.m2/
 
-
+### Utilitary Local Shell Scripts ###
+run_docker.sh
+stop_docker.sh
