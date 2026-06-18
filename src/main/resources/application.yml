@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: tripmanager
+  profiles:
+    active: dev
+
+springdoc:
+  swagger-ui:
+    path: /docs

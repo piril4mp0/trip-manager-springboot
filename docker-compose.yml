@@ -1,0 +1,30 @@
+services:
+  database:
+    image: "postgres:latest"
+    ports:
+      - 5433:5432
+    environment:
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: tripmanager
+    volumes:
+      - ./db-data/:/var/lib/postgresql/
+
+  app:
+    image: eclipse-temurin:17-jdk-jammy
+    user: "1000:1000"
+    ports:
+      - 8080:8080
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: ./mvnw spring-boot:run -Dmaven.repo.local=/app/.m2/repository -Dspring-boot.run.jvmArguments="-XX:TieredStopAtLevel=1"
+    environment:
+      - HOME=/tmp
+      - DB_HOST=database
+      - DB_PORT=5432
+      - DB_NAME=tripmanager
+      - DB_USER=dev
+      - DB_PASSWORD=dev
+    depends_on:
+      - database
