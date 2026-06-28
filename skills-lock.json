@@ -13,6 +13,12 @@
       "skillPath": "skills/caveman-commit/SKILL.md",
       "computedHash": "790a4eeace0be35c6691faf923518ba5bd50f1f1305d1101d09dd4971be94e00"
     },
+    "flyway-migrations": {
+      "source": "ashchupliak/dream-team",
+      "sourceType": "github",
+      "skillPath": "skills/flyway-migrations/SKILL.md",
+      "computedHash": "a10d2e32687a746ec30bcd97c070216453c772c6a8633f9a1da8198fecb73d6a"
+    },
     "java-springboot": {
       "source": "github/awesome-copilot",
       "sourceType": "github",

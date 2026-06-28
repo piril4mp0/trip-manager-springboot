@@ -7,6 +7,7 @@ import com.owl.tripmanager.model.Tourist;
 import com.owl.tripmanager.model.Trip;
 import com.owl.tripmanager.repository.TripRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TripService {
@@ -34,6 +36,7 @@ public class TripService {
 
     @Transactional
     public Trip createTrip(TripRequest request) {
+        log.info("Creating trip: {}", request.tripTitle());
         TripStatus status = request.status() != null ? request.status() : TripStatus.PENDING;
         Trip trip = Trip.builder()
                 .startDate(request.startDate())
@@ -44,11 +47,14 @@ public class TripService {
                 .childPrice(request.childPrice())
                 .status(status)
                 .build();
-        return tripRepository.save(trip);
+        Trip saved = tripRepository.save(trip);
+        log.info("Successfully created trip with ID: {}", saved.getId());
+        return saved;
     }
 
     @Transactional
     public Trip updateTrip(Long id, TripRequest request) {
+        log.info("Updating trip with ID: {}", id);
         Trip existing = getTripById(id);
 
         if (request.startDate() != null) {
@@ -73,33 +79,40 @@ public class TripService {
             existing.setStatus(request.status());
         }
 
-        return tripRepository.save(existing);
+        Trip updated = tripRepository.save(existing);
+        log.info("Successfully updated trip with ID: {}", updated.getId());
+        return updated;
     }
 
     @Transactional
     public void deleteTrip(Long id) {
+        log.info("Deleting trip with ID: {}", id);
         if (!tripRepository.existsById(id)) {
             throw new TripNotFoundException("Trip not found with id: " + id);
         }
         tripRepository.deleteById(id);
+        log.info("Successfully deleted trip with ID: {}", id);
     }
 
     @Transactional
     public Trip subscribeTourist(Long tripId, Long touristId) {
+        log.info("Attempting to subscribe tourist ID: {} to trip ID: {}", touristId, tripId);
         Trip trip = getTripById(tripId);
         Tourist tourist = touristService.getTouristById(touristId);
 
-        // Check if tourist is already subscribed
         if (trip.getTourists().contains(tourist)) {
+            log.warn("Tourist ID: {} is already subscribed to trip ID: {}", touristId, tripId);
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tourist is already subscribed to this trip");
         }
 
-        // Check capacity limit
         if (trip.getTourists().size() >= trip.getTouristsLimit()) {
+            log.warn("Trip ID: {} capacity limit reached: {}", tripId, trip.getTouristsLimit());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Trip capacity limit reached: " + trip.getTouristsLimit());
         }
 
         trip.getTourists().add(tourist);
-        return tripRepository.save(trip);
+        Trip saved = tripRepository.save(trip);
+        log.info("Successfully subscribed tourist ID: {} to trip ID: {}", touristId, tripId);
+        return saved;
     }
 }
