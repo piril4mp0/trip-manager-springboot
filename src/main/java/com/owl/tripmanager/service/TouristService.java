@@ -40,6 +40,10 @@ public class TouristService {
     @Transactional
     public Tourist createTourist(TouristRequest request) {
         log.info("Creating tourist: {} {}", request.firstName(), request.lastName());
+        if (!isValidCpf(request.document())) {
+            log.warn("Failed to create tourist: invalid CPF {}", request.document());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid CPF: " + request.document());
+        }
         if (touristRepository.existsByDocument(request.document())) {
             log.warn("Failed to create tourist: document {} already exists", request.document());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tourist already exists with document: " + request.document());
@@ -58,6 +62,10 @@ public class TouristService {
     @Transactional
     public Tourist updateTourist(Long id, TouristRequest request) {
         log.info("Updating tourist with ID: {}", id);
+        if (!isValidCpf(request.document())) {
+            log.warn("Failed to update tourist ID: {} - invalid CPF {}", id, request.document());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid CPF: " + request.document());
+        }
         Tourist existingTourist = touristRepository.findById(id)
                 .orElseThrow(() -> new TouristNotFoundException("Tourist not found with id: " + id));
 
@@ -85,5 +93,38 @@ public class TouristService {
         }
         touristRepository.deleteById(id);
         log.info("Successfully deleted tourist with ID: {}", id);
+    }
+
+    private boolean isValidCpf(String cpf) {
+        if (cpf == null) {
+            return false;
+        }
+        String cleanCpf = cpf.replaceAll("\\D", "");
+        if (cleanCpf.length() != 11) {
+            return false;
+        }
+        if (cleanCpf.matches("(\\d)\\1{10}")) {
+            return false;
+        }
+        int sum1 = 0;
+        for (int i = 0; i < 9; i++) {
+            sum1 += Character.getNumericValue(cleanCpf.charAt(i)) * (10 - i);
+        }
+        int r1 = (sum1 * 10) % 11;
+        if (r1 == 10 || r1 == 11) {
+            r1 = 0;
+        }
+        if (r1 != Character.getNumericValue(cleanCpf.charAt(9))) {
+            return false;
+        }
+        int sum2 = 0;
+        for (int i = 0; i < 10; i++) {
+            sum2 += Character.getNumericValue(cleanCpf.charAt(i)) * (11 - i);
+        }
+        int r2 = (sum2 * 10) % 11;
+        if (r2 == 10 || r2 == 11) {
+            r2 = 0;
+        }
+        return r2 == Character.getNumericValue(cleanCpf.charAt(10));
     }
 }
